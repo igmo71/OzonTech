@@ -1,6 +1,6 @@
 ﻿namespace OzonTech.Contest
 {
-    internal class T2DateCheck
+    internal class T02DateCheck
     {
         static void Run(string[] args)
         {

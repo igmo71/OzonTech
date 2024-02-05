@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OzonTech.Contest
 {
-    internal class T3CarNumbers
+    internal class T03CarNumbers
     {
         internal static void Run(string[] args)
         {

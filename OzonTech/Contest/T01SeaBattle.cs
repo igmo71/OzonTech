@@ -1,6 +1,6 @@
 ﻿namespace OzonTech.Contest
 {
-    internal class T1SeaBattle
+    internal class T01SeaBattle
     {
         internal static void Run(string[] args)
         {
