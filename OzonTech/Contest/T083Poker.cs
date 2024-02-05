@@ -1,55 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OzonTech.Contest
+﻿namespace OzonTech.Contest
 {
     internal class T083Poker
     {
         internal static void Run(string[] args)
         {
 
-            if (!int.TryParse(Console.ReadLine(), out int inputDataSetCount))
+            if (!int.TryParse(Console.ReadLine(), out int gamesCount))
                 return;
 
-            var cardsDeck = Card.GetDeck();
-
-            List<int[]> inputDataSetList = new();
-            for (int i = 0; i < inputDataSetCount; i++)
+            List<Game> games = new();
+            for (int i = 0; i < gamesCount; i++)
             {
+                var game = new Game();
                 int playersCount = int.Parse(Console.ReadLine()!);
-                List<Player> playerList = new List<Player>();
+
+                List<Player> players = new List<Player>();
                 for (int j = 0; j < playersCount; j++)
                 {
-                    string[] playerCards = Console.ReadLine()!.Split(' ');
-                    
-                    var player = new Player()
-                    {
-                        Card1 = new()
-                        {
-                            Rank = new() { Key = playerCards[0][0], Value = Card.Ranks[playerCards[0][0]] },
-                            Suite = new() { Key = playerCards[0][1], Value = Card.Suites[playerCards[0][1]] }
-                        },
-                        Card2 = new()
-                        {
-                            Rank = new() { Key = playerCards[1][0], Value = Card.Ranks[playerCards[1][0]] },
-                            Suite = new() { Key = playerCards[1][1], Value = Card.Suites[playerCards[1][1]] }
-                        }
-                    };
-
-                    cardsDeck.RemoveAt(player.Card1.)
+                    var cards = Console.ReadLine()!.Split(' ').ToList();
+                    game.Players.Add(new() { Cards = cards });
+                    cards.ForEach(c => game.CardDeck.Remove(c));
                 }
+                games.Add(game);
             }
 
+            foreach (var games in games)
+            {
+                var deck = Card.GetDeck();
+                for (int i = 1; i < games.Count; i++)
+                {
+                    //if (players[0].CompareTo(players[i]) >= 0)
+                    //    Console.WriteLine("Ok");
+                    //else
+                    //    Console.WriteLine("MMM");
+                }
+            }
         }
-
     }
 
     internal class Card
     {
-
         internal static Dictionary<char, int> Ranks = new()
         {
             ['2'] = 2,
@@ -75,51 +65,82 @@ namespace OzonTech.Contest
             ['H'] = 4,
         };
 
-        public required Rank Rank { get; set; }
-        public required Suite Suite { get; set; }
-
-        public static List<Card> GetDeck()
+        internal static List<string> GetDeck()
         {
-            List<Card> deck = new List<Card>();
-            foreach (var suite in Suites)
+            List<string> result = new List<string>();
+            foreach (var rank in Ranks)
             {
-                foreach (var rank in Ranks)
+                foreach (var suite in Suites)
                 {
-                    deck.Add(new Card()
-                    {
-                        Rank = new() { Key = rank.Key, Value = rank.Value },
-                        Suite = new() { Key = suite.Key, Value = suite.Value }
-                    });
+                    result.Add($"{rank.Key}{suite.Key}");
                 }
             }
-            return deck;
+            return result;
         }
     }
 
-    
-
-    internal class Suite
+    internal class Game
     {
-        public required char Key { get; set; }
-        public int Value { get; set; }
+        public Game()
+        {
+            CardDeck = Card.GetDeck();
+            Players = new();
+        }
+        public List<Player> Players { get; set; }
+        public List<string> CardDeck { get; set; }
     }
 
-    internal class Rank
+
+    internal class Player : IComparable<Player>
     {
-        public required char Key { get; set; }
-        public int Value { get; set; }
+        public required List<string> Cards { get; set; }
+        public Combination Combination
+        {
+            get
+            {
+                var result = Combination.HighCard;
+                if (Cards.Count == 2 && Cards[0][0] == Cards[1][0])
+                    result = Combination.Pair;
+                if (Cards.Count == 3 && Cards[0][0] == Cards[1][0] && Cards[1][0] == Cards[2][0])
+                    result = Combination.Set;
+                return result;
+            }
+        }
+
+        public int SetRank => Card.Ranks[Cards[0][0]];
+        public int PairRank => Card.Ranks[Cards[0][0]];
+        public int HighCardRank
+        {
+            get
+            {
+                var result = Card.Ranks[Cards[0][0]] > Card.Ranks[Cards[1][0]] ? Card.Ranks[Cards[0][0]] : Card.Ranks[Cards[1][0]];
+                if (Cards.Count == 2)
+                    return result;
+                if (Cards.Count == 3)
+                    result = result > Card.Ranks[Cards[2][0]] ? result : Card.Ranks[Cards[2][0]];
+                return result;
+            }
+        }
+
+        public int CompareTo(Player? other)
+        {
+            var result = this.Combination - other.Combination;
+            if (result != 0)
+                return result;
+
+            if (Combination == Combination.Set)
+                return SetRank - other.SetRank;
+
+            if (Combination == Combination.Pair)
+                return PairRank - other.PairRank;
+
+            if (Combination == Combination.HighCard)
+                return HighCardRank - other.HighCardRank;
+            return 0;
+        }
     }
 
-    internal class Player
-    {
-        internal required Card Card1 { get; set; }
-        internal required Card Card2 { get; set; }
-        public Combination Combination => Card1.Rank.Value == Card2.Rank.Value ? Combination.Pair : Combination.HighCard;
-        public int PairRank => Card1.Rank.Value;
-        public int HighCardRank => Card1.Rank.Value > Card2.Rank.Value ? Card1.Rank.Value : Card2.Rank.Value;
-    }
-
-    enum Combination
+    internal enum Combination
     {
         HighCard, Pair, Set
     }
