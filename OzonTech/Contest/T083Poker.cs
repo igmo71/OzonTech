@@ -9,31 +9,33 @@
                 return;
 
             List<Game> games = new();
+
             for (int i = 0; i < gamesCount; i++)
             {
-                var game = new Game();
+                Game game = new();
+
                 int playersCount = int.Parse(Console.ReadLine()!);
 
-                List<Player> players = new List<Player>();
+                List<Player> players = new();
+
                 for (int j = 0; j < playersCount; j++)
                 {
                     var cards = Console.ReadLine()!.Split(' ').ToList();
+
                     game.Players.Add(new() { Cards = cards });
+
+                    //game.CardDeck.RemoveAll(cd => cards.Any(c => c == cd));
                     cards.ForEach(c => game.CardDeck.Remove(c));
                 }
                 games.Add(game);
             }
 
-            foreach (var games in games)
+            List<Card> resultDeck = new List<Card>();
+            foreach (var game in games)
             {
-                var deck = Card.GetDeck();
-                for (int i = 1; i < games.Count; i++)
-                {
-                    //if (players[0].CompareTo(players[i]) >= 0)
-                    //    Console.WriteLine("Ok");
-                    //else
-                    //    Console.WriteLine("MMM");
-                }
+                game
+                    .Process()
+                    .PrintResultCardDeck();
             }
         }
     }
@@ -56,6 +58,11 @@
             ['K'] = 13,
             ['A'] = 14,
         };
+
+        internal static int Rank(string card)
+        {
+            return Ranks.First(r => r.Key == card[0]).Value;
+        }
 
         internal static Dictionary<char, int> Suites = new()
         {
@@ -84,12 +91,42 @@
         public Game()
         {
             CardDeck = Card.GetDeck();
+            ResultCardDeck = new();
             Players = new();
         }
         public List<Player> Players { get; set; }
         public List<string> CardDeck { get; set; }
-    }
+        public List<string> ResultCardDeck { get; set; }
 
+        internal void PrintResultCardDeck()
+        {
+            Console.WriteLine(ResultCardDeck.Count);
+            ResultCardDeck.ForEach(c => Console.WriteLine(c));
+        }
+
+        internal Game Process()
+        {
+            var me = Players.First();
+            var others = Players.GetRange(1, Players.Count - 1);
+
+            foreach (var card in CardDeck)
+            {
+                me.Cards.Add(card);
+
+                others.ForEach(p => p.Cards.Add(card));
+                others.Sort();
+                var winner = others.Last();
+
+                if (me.CompareTo(winner) >= 0)
+                    ResultCardDeck.Add(card);
+
+                others.ForEach(p => p.Cards.Remove(card));
+
+                me.Cards.Remove(card);
+            }
+            return this;
+        }
+    }
 
     internal class Player : IComparable<Player>
     {
@@ -99,37 +136,63 @@
             get
             {
                 var result = Combination.HighCard;
-                if (Cards.Count == 2 && Cards[0][0] == Cards[1][0])
+
+                if (Card.Rank(Cards[0]) == Card.Rank(Cards[1]) ||
+                    Card.Rank(Cards[1]) == Card.Rank(Cards[2]) ||
+                    Card.Rank(Cards[2]) == Card.Rank(Cards[0]))
                     result = Combination.Pair;
-                if (Cards.Count == 3 && Cards[0][0] == Cards[1][0] && Cards[1][0] == Cards[2][0])
-                    result = Combination.Set;
+
+                if (Card.Rank(Cards[0]) == Card.Rank(Cards[1]) &&
+                    Card.Rank(Cards[1]) == Card.Rank(Cards[2]))
+                    result = Combination.CardsSet;
+
                 return result;
             }
         }
 
-        public int SetRank => Card.Ranks[Cards[0][0]];
-        public int PairRank => Card.Ranks[Cards[0][0]];
+        public int CardsSetRank => Card.Rank(Cards[0]);
+
+        public int PairRank
+        {
+            get
+            {
+                if (Card.Rank(Cards[0]) == Card.Rank(Cards[1]))
+                    return Card.Rank(Cards[0]);
+
+                if (Card.Rank(Cards[1]) == Card.Rank(Cards[2]))
+                    return Card.Rank(Cards[1]);
+
+                if (Card.Rank(Cards[2]) == Card.Rank(Cards[0]))
+                    return Card.Rank(Cards[2]);
+
+                return 0;
+            }
+        }
+
         public int HighCardRank
         {
             get
             {
-                var result = Card.Ranks[Cards[0][0]] > Card.Ranks[Cards[1][0]] ? Card.Ranks[Cards[0][0]] : Card.Ranks[Cards[1][0]];
+                var result = Card.Rank(Cards[0]) > Card.Rank(Cards[1]) ? Card.Rank(Cards[0]) : Card.Rank(Cards[1]);
+
                 if (Cards.Count == 2)
                     return result;
+
                 if (Cards.Count == 3)
-                    result = result > Card.Ranks[Cards[2][0]] ? result : Card.Ranks[Cards[2][0]];
+                    result = result > Card.Rank(Cards[2]) ? result : Card.Rank(Cards[2]);
+
                 return result;
             }
         }
 
         public int CompareTo(Player? other)
         {
-            var result = this.Combination - other.Combination;
+            var result = this.Combination - other!.Combination;
             if (result != 0)
                 return result;
 
-            if (Combination == Combination.Set)
-                return SetRank - other.SetRank;
+            if (Combination == Combination.CardsSet)
+                return CardsSetRank - other.CardsSetRank;
 
             if (Combination == Combination.Pair)
                 return PairRank - other.PairRank;
@@ -142,6 +205,6 @@
 
     internal enum Combination
     {
-        HighCard, Pair, Set
+        HighCard, Pair, CardsSet
     }
 }
