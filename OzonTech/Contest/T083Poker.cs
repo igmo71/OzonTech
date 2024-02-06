@@ -4,7 +4,6 @@
     {
         internal static void Run(string[] args)
         {
-
             if (!int.TryParse(Console.ReadLine(), out int gamesCount))
                 return;
 
