@@ -6,37 +6,37 @@ namespace OzonTech
     {
         static void Main(string[] args)
         {
-            //Debug.WriteLine($"=====> Start Application");
             using StreamReader input = new StreamReader(Console.OpenStandardInput(), bufferSize: 16384);
             using StreamWriter output = new StreamWriter(Console.OpenStandardOutput(), bufferSize: 16384);
+
+            var iputStartTimestamp = Stopwatch.GetTimestamp();
+
             string? fieldsCountString = input.ReadLine();
             int fieldsCount = int.Parse(fieldsCountString!);
             Field[] fields = new Field[fieldsCount];
 
-            //var iputStart = Stopwatch.GetTimestamp();
-
             for (int i = 0; i < fieldsCount; i++)
             {
-                string[] size = input.ReadLine()!.Split(' ');
+                string? sizeString = input.ReadLine();
+                string[] size = sizeString!.Split(' ');
                 fields[i].rowCount = int.Parse(size[0]);
                 fields[i].colCount = int.Parse(size[1]);
                 fields[i].rows = new string[fields[i].rowCount];
                 for (int j = 0; j < fields[i].rowCount; j++)
                 {
                     fields[i].rows[j] = input.ReadLine()!;
-                    //Debug.WriteLine($"fields[{i}].rows[{j}]");
+                    Debug.WriteLine($"fields[{i}].rows[{j}]");
                 }
             }
-            //output.WriteLine($"input - {Stopwatch.GetElapsedTime(iputStart).TotalMilliseconds}");
+            Debug.WriteLine($"input: {Stopwatch.GetElapsedTime(iputStartTimestamp).TotalMilliseconds}(ms)");
 
-            Console.Write("\r");
-            var processStart = Stopwatch.GetTimestamp();
+            var processStartTimestamp = Stopwatch.GetTimestamp();
             foreach (Field field in fields)
             {
                 string result = field.Process();
                 output.WriteLine(result);
             }
-            //output.WriteLine($"process - {Stopwatch.GetElapsedTime(processStart).TotalMilliseconds}");
+            Debug.WriteLine($"process: {Stopwatch.GetElapsedTime(processStartTimestamp).TotalMilliseconds}(ms)");
         }
     }
 
@@ -50,20 +50,17 @@ namespace OzonTech
         {
             List<int> internalCountList = new();
 
-            //var parseSrart = Stopwatch.GetTimestamp();
             var frames = ParseFrames();
-            //Console.WriteLine($"parse - {Stopwatch.GetElapsedTime(parseSrart)}");
 
-            //var processStart =  Stopwatch.GetTimestamp();
             for (int i = 0; i < frames.Count; i++)
             {
                 int internalCount = 0;
                 for (int j = 0; j < frames.Count; j++)
                 {
+                    Debug.WriteLine($"Frame.InternalTo(frames[{i}], frames[{j}])");
                     if (i != j && Frame.InternalTo(frames[i], frames[j]))
                     {
                         internalCount++;
-                        //Debug.WriteLine($"internalCount => {internalCount}");
                     }
                 }
                 internalCountList.Add(internalCount);
@@ -71,7 +68,6 @@ namespace OzonTech
             internalCountList.Sort();
 
             string result = string.Join(' ', internalCountList);
-            //Console.WriteLine($"process - {Stopwatch.GetElapsedTime(processStart)}"); 
             return result;
         }
 
@@ -87,7 +83,7 @@ namespace OzonTech
                         if (i < rowCount - 1 && j < colCount - 1 && rows[i][j + 1] == '*' && rows[i + 1][j] == '*') // topLeft
                         {
                             frames.Add(new Frame() { topLeft = new Coordinate(i, j) });
-                            //Debug.WriteLine($"frames.Count => {frames.Count}");
+                            Debug.WriteLine($"frames.Count: {frames.Count}");
                         }
                         if (i < rowCount - 1 && j != 0 && rows[i][j - 1] == '*' && rows[i + 1][j] == '*') // topRight
                         {
