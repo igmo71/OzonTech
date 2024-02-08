@@ -6,8 +6,8 @@ namespace OzonTech
     {
         static void Main(string[] args)
         {
-            using StreamReader input = new StreamReader(Console.OpenStandardInput(), bufferSize: 16384);
-            using StreamWriter output = new StreamWriter(Console.OpenStandardOutput(), bufferSize: 16384);
+            using StreamReader input = new StreamReader(Console.OpenStandardInput(), bufferSize: 65_536);
+            using StreamWriter output = new StreamWriter(Console.OpenStandardOutput(), bufferSize: 65_536);
 
             var iputStartTimestamp = Stopwatch.GetTimestamp();
 
@@ -83,30 +83,33 @@ namespace OzonTech
                         if (i < rowCount - 1 && j < colCount - 1 && rows[i][j + 1] == '*' && rows[i + 1][j] == '*') // topLeft
                         {
                             frames.Add(new Frame() { topLeft = new Coordinate(i, j) });
-                            Debug.WriteLine($"frames.Count: {frames.Count}");
+                            Debug.WriteLine($"topLeft: Coordinate({i}, {j})");
                         }
                         if (i < rowCount - 1 && j != 0 && rows[i][j - 1] == '*' && rows[i + 1][j] == '*') // topRight
                         {
-                            var farame = frames.Last();
-                            int index = frames.IndexOf(farame);
-                            farame.topRight = new Coordinate(i, j);
-                            frames[index] = farame;
+                            var frame = frames.Last();
+                            int index = frames.IndexOf(frame);
+                            frame.topRight = new Coordinate(i, j);
+                            frames[index] = frame;
+                            Debug.WriteLine($"topRight: Coordinate({i}, {j})");
                         }
                         if (i != 0 && j < colCount - 1 && rows[i - 1][j] == '*' && rows[i][j + 1] == '*') // bottomLeft
                         {
                             Coordinate bottomLeft = new(i, j);
-                            var farame = frames.Single(f => f.bottomLeft == null && f.bottomRight == null && f.topLeft!.Value.col == bottomLeft.col);
-                            int index = frames.IndexOf(farame);
-                            farame.bottomLeft = bottomLeft;
-                            frames[index] = farame;
+                            var frame = frames.Single(f => f.bottomLeft == null && f.bottomRight == null && f.topLeft!.Value.col == bottomLeft.col);
+                            int index = frames.IndexOf(frame);
+                            frame.bottomLeft = bottomLeft;
+                            frames[index] = frame;
+                            Debug.WriteLine($"bottomLeft: Coordinate({i}, {j})");
                         }
                         if (i != 0 && j != 0 && rows[i - 1][j] == '*' && rows[i][j - 1] == '*') // bottomRight
                         {
                             Coordinate bottomRight = new(i, j);
-                            var farame = frames.Single(f => f.bottomRight == null && f.topRight!.Value.col == bottomRight.col && f.bottomLeft!.Value.row == bottomRight.row);
-                            int index = frames.IndexOf(farame);
-                            farame.bottomRight = bottomRight;
-                            frames[index] = farame;
+                            var frame = frames.Single(f => f.bottomRight == null && f.topRight!.Value.col == bottomRight.col && f.bottomLeft!.Value.row == bottomRight.row);
+                            int index = frames.IndexOf(frame);
+                            frame.bottomRight = bottomRight;
+                            frames[index] = frame;
+                            Debug.WriteLine($"bottomRight: Coordinate({i}, {j})");
                         }
                     }
                 }
